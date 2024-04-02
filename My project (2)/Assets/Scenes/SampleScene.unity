@@ -13107,13 +13107,14 @@ MonoBehaviour:
     m_Bits: 64
   grapplingStartPoint: {fileID: 890936904}
   maxGrappleDistance: 20
-  grappleDelayTime: 0.01
+  grappleDelayTime: 0.2
   grapplingCd: 0.1
   overshootYAxis: 10
   grappableLayerMask:
     serializedVersion: 2
     m_Bits: 64
   grapplingLineRenderer: {fileID: 890936905}
+  ropeQuality: 30
 --- !u!43 &2041096314
 Mesh:
   m_ObjectHideFlags: 0

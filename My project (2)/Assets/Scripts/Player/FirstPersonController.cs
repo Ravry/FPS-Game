@@ -29,6 +29,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float overshootYAxis;
     [SerializeField] private LayerMask grappableLayerMask;
     [SerializeField] private LineRenderer grapplingLineRenderer;
+    [SerializeField] private int ropeQuality = 5;
 
     private Camera camera;
     private Rigidbody rigidbody;
@@ -48,8 +49,10 @@ public class FirstPersonController : MonoBehaviour
 
     private Vector3 grapplePoint;
     private float grapplingCdTimer;
+    private float startTime = 0;
     private bool isGrappling;
     private bool activeGrappling;
+    private Vector3 ropeDir;
     
     void Awake()
     {
@@ -132,6 +135,9 @@ public class FirstPersonController : MonoBehaviour
             return;
 
         isGrappling = true;
+        grapplingLineRenderer.positionCount = (ropeQuality + 1);
+        ropeDir = camera.transform.up;
+        startTime = Time.time;
         if (Physics.Raycast(camera.transform.position, camera.transform.forward, out RaycastHit rayHit, maxGrappleDistance, grappableLayerMask))
         {
             isFreeze = true;
@@ -145,7 +151,12 @@ public class FirstPersonController : MonoBehaviour
         }
 
         grapplingLineRenderer.enabled = true;
-        grapplingLineRenderer.SetPosition(1, grapplePoint);
+
+        for (int i = 1; i <= ropeQuality; i++)
+        {
+            float t = i / (float)ropeQuality;
+            grapplingLineRenderer.SetPosition(i, Vector3.Lerp(grapplingStartPoint.position, grapplePoint, t));
+        }
     }
     
     private void ExecuteGrapple()
@@ -217,7 +228,33 @@ public class FirstPersonController : MonoBehaviour
     private void LateUpdate()
     {
         if (isGrappling)
+        {
             grapplingLineRenderer.SetPosition(0, grapplingStartPoint.position);
+
+            float currentTime = Time.time;
+            float time = currentTime - startTime;
+            float processed = time / grappleDelayTime;
+
+            if (processed < 1f)
+            {
+                for (int i = 1; i <= ropeQuality; i++)
+                {
+                    float t = i / (float)ropeQuality;
+                    Vector3 ropeOffset = ropeDir * ((1f - t) * Mathf.Sin((t * 4 * Mathf.PI)));
+
+
+                    grapplingLineRenderer.SetPosition(i,
+                                                      Vector3.Lerp(grapplingStartPoint.position, grapplePoint, t * processed) +
+                                                      ropeOffset);
+                }
+            }
+            else
+            {
+                grapplingLineRenderer.positionCount = 2;
+                grapplingLineRenderer.SetPosition(0, grapplingStartPoint.position);
+                grapplingLineRenderer.SetPosition(1, grapplePoint);
+            }
+        }
     }
 
     private void OnDisable()
