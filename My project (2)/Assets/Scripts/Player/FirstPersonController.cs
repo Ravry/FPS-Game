@@ -180,7 +180,7 @@ public class FirstPersonController : MonoBehaviour
         isGrounded = Physics.Raycast(playerOrientation.position, Vector3.down, (playerHeight / 2f) + .2f, groundLayerMask);
 
         if (isFreeze)
-            rigidbody.velocity = Vector3.zero;
+            rigidbody.velocity = new Vector3(0, rigidbody.velocity.y, 0);
 
         if (grapplingCdTimer > 0)
             grapplingCdTimer -= Time.deltaTime;
