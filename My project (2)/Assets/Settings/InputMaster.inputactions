@@ -15,6 +15,15 @@
                     "initialStateCheck": true
                 },
                 {
+                    "name": "Sprint",
+                    "type": "Button",
+                    "id": "b98e2f27-9755-45b7-ab69-d6d8afb1f1ff",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Jump",
                     "type": "Button",
                     "id": "1718b6c9-7e0c-4073-8790-05c899371ecd",
@@ -27,6 +36,15 @@
                     "name": "Fire",
                     "type": "Button",
                     "id": "04562dd8-f87f-4ae9-9dd8-9d2129cb7d66",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Interaction",
+                    "type": "Button",
+                    "id": "dcd64ca5-3b64-41c4-94df-0f34561a7126",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -108,6 +126,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fd4e0cec-21eb-4640-90e7-4639126f5be7",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Interaction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "afbc561b-3885-434e-828c-4cf16519a147",
+                    "path": "<Keyboard>/leftShift",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Sprint",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
