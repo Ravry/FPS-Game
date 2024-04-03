@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 using static UnityEngine.InputSystem.InputAction;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -12,8 +13,8 @@ public class FirstPersonController : MonoBehaviour
     [Header("Movement Parameters")]
     [SerializeField] private Transform playerOrientation;
     //walking
-    [SerializeField] private float walkSpeed = 10f;
-    [SerializeField] private float sprintSpeed = 20f;
+    [SerializeField] public float walkSpeed = 10f;
+    [SerializeField] public float sprintSpeed = 20f;
     [SerializeField] private float groundDrag = 4f;
     //jumping
     [SerializeField] private float jumpHeight = 2f;
@@ -22,6 +23,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private LayerMask groundLayerMask;
 
     [Header("Grappling Parameters")]
+    [SerializeField] private GameObject grapplingHookPrefab;
     [SerializeField] private Transform grapplingStartPoint;
     [SerializeField] private float maxGrappleDistance;
     [SerializeField] private float grappleDelayTime;
@@ -31,8 +33,11 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private LineRenderer grapplingLineRenderer;
     [SerializeField] private int ropeQuality = 5;
 
+    [Header("UI Elements")]
+    [SerializeField] private Image crosshairImage;
+
     private Camera camera;
-    private Rigidbody rigidbody;
+    [HideInInspector] public Rigidbody rigidbody;
 
     private InputMaster controls;
 
@@ -42,10 +47,10 @@ public class FirstPersonController : MonoBehaviour
     private float rotationX = 0;
     private float rotationY = 0;
 
-    private bool isGrounded = false;
+    [HideInInspector] public bool isGrounded = false;
     private bool isFreeze = false;
 
-    private float speed;
+    [HideInInspector] public float speed;
 
     private Vector3 grapplePoint;
     private float grapplingCdTimer;
@@ -53,7 +58,8 @@ public class FirstPersonController : MonoBehaviour
     private bool isGrappling;
     private bool activeGrappling;
     private Vector3 ropeDir;
-    
+    private Transform grapplingHookTransform;
+
     void Awake()
     {
         camera = Camera.main;
@@ -138,11 +144,21 @@ public class FirstPersonController : MonoBehaviour
         grapplingLineRenderer.positionCount = (ropeQuality + 1);
         ropeDir = camera.transform.up;
         startTime = Time.time;
-        if (Physics.Raycast(camera.transform.position, camera.transform.forward, out RaycastHit rayHit, maxGrappleDistance, grappableLayerMask))
+        StartCoroutine(AudioManager.instance.PlaySoundForSeconds("hook_rope", grappleDelayTime));
+        if (Physics.Raycast(camera.transform.position, camera.transform.forward, out RaycastHit rayHit, maxGrappleDistance))
         {
-            isFreeze = true;
-            grapplePoint = rayHit.point;
-            Invoke(nameof(ExecuteGrapple), grappleDelayTime);
+            if ((grappableLayerMask & (1 << rayHit.transform.gameObject.layer)) != 0)
+            {
+                StartCoroutine(AudioManager.instance.PlaySoundAfterSeconds("hook_hit", grappleDelayTime));
+                isFreeze = true;
+                grapplePoint = rayHit.point;
+                Invoke(nameof(ExecuteGrapple), grappleDelayTime);
+            }
+            else
+            {
+                grapplePoint = camera.transform.position + camera.transform.forward * maxGrappleDistance;
+                Invoke(nameof(StopGrapple), grappleDelayTime);
+            }
         }
         else
         {
@@ -161,6 +177,7 @@ public class FirstPersonController : MonoBehaviour
     
     private void ExecuteGrapple()
     {
+        grapplingHookTransform = Instantiate(grapplingHookPrefab, grapplePoint, Quaternion.identity).transform;
         isFreeze = false;
         Vector3 lowestPoint = transform.position;
         float grapplePointRelativeYPos = grapplePoint.y - lowestPoint.y;
@@ -174,6 +191,8 @@ public class FirstPersonController : MonoBehaviour
     
     private void StopGrapple()
     {
+        if (grapplingHookTransform != null)
+            Destroy(grapplingHookTransform.gameObject);
         isGrappling = false;
         isFreeze = false;
         activeGrappling = false;
@@ -188,6 +207,19 @@ public class FirstPersonController : MonoBehaviour
 
     private void Update()
     {
+
+        if (Physics.Raycast(camera.transform.position, camera.transform.forward, out RaycastHit rayHit, maxGrappleDistance))
+        {
+            if ((grappableLayerMask & (1 << rayHit.transform.gameObject.layer)) != 0)
+            {
+                crosshairImage.color = Color.blue;
+            }
+            else
+                crosshairImage.color = Color.black;
+        }
+        else
+            crosshairImage.color = Color.black;
+
         isGrounded = Physics.Raycast(playerOrientation.position, Vector3.down, (playerHeight / 2f) + .2f, groundLayerMask);
 
         if (isFreeze)
@@ -229,6 +261,11 @@ public class FirstPersonController : MonoBehaviour
     {
         if (isGrappling)
         {
+            if (grapplingHookTransform != null)
+            {
+                grapplingHookTransform.position = grapplePoint;
+                grapplingHookTransform.forward = camera.transform.forward;
+            }
             grapplingLineRenderer.SetPosition(0, grapplingStartPoint.position);
 
             float currentTime = Time.time;
